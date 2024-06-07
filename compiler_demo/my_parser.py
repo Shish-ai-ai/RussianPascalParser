@@ -130,6 +130,10 @@ def make_parser():
                             return ArrayDeclNode(tocs[0], tocs[1], *tocs[2:], loc=loc)
                         elif cls is ArrayElemNode:
                             return ArrayElemNode(tocs[0], *tocs[1:], loc=loc)
+                        elif cls is ArrayAssignNode:  # Добавьте это
+                            return ArrayAssignNode(tocs[0], tocs[1], loc=loc)  # Добавьте это
+                        elif cls is AssignNode:
+                            return AssignNode(tocs[0], tocs[1], loc=loc)
                         else:
                             return cls(*tocs, loc=loc)
 

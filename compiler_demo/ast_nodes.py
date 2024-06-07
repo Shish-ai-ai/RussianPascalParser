@@ -279,7 +279,7 @@ class TypeConvertNode(ExprNode):
 
     @property
     def childs(self) -> Tuple[AstNode, ...]:
-        return (_GroupNode(str(self.type), self.expr), )
+        return (_GroupNode(str(self.type), self.expr),)
 
 
 def type_convert(expr: ExprNode, type_: TypeDesc, except_node: Optional[AstNode] = None,
@@ -308,6 +308,7 @@ def type_convert(expr: ExprNode, type_: TypeDesc, except_node: Optional[AstNode]
 class StmtNode(ExprNode, ABC):
     """Абстракный класс для деклараций или инструкций в AST-дереве
     """
+
     def to_str_full(self):
         return self.to_str()
 
@@ -379,7 +380,7 @@ class ReturnNode(StmtNode):
 
     @property
     def childs(self) -> Tuple[ExprNode]:
-        return (self.val, )
+        return (self.val,)
 
     def semantic_check(self, scope: IdentScope) -> None:
         self.val.semantic_check(IdentScope(scope))
@@ -521,7 +522,8 @@ class FuncNode(StmtNode):
 
     def semantic_check(self, scope: IdentScope) -> None:
         if scope.curr_func:
-            self.semantic_error("Объявление функции ({}) внутри другой функции не поддерживается".format(self.name.name))
+            self.semantic_error(
+                "Объявление функции ({}) внутри другой функции не поддерживается".format(self.name.name))
         parent_scope = scope
         self.type.semantic_check(scope)
         scope = IdentScope(scope)
@@ -610,6 +612,32 @@ class ArrayElemNode(ExprNode):
             if self.name.node_type.dimensions != 2:
                 self.semantic_error(f'{self.name.name} не является двумерным массивом')
         self.node_type = self.name.node_type.base_type
+
+
+class ArrayAssignNode(StmtNode):
+    """Класс для представления в AST-дереве оператора присваивания значения элементу массиву"""
+
+    def __init__(self, array_elem: ArrayElemNode, val: ExprNode,
+                 row: Optional[int] = None, col: Optional[int] = None, **props) -> None:
+        super().__init__(row=row, col=col, **props)
+        self.array_elem = array_elem  # элемент массива, например массив[0]
+        self.val = val  # значение, которое присваивается, например 5
+
+    def __str__(self) -> str:
+        # Возвращаем строку в формате 'массив[0] = 5'
+        return f'{self.array_elem} = {self.val}'
+
+    @property
+    def childs(self) -> Tuple[AstNode, ...]:
+        # Возвращаем элемент массива и значение как отдельные узлы
+        return (self.array_elem, self.val)
+
+    def semantic_check(self, scope: IdentScope) -> None:
+        self.array_elem.semantic_check(scope)
+        self.val.semantic_check(scope)
+        self.val = type_convert(self.val, self.array_elem.node_type, self, 'присваиваемое значение')
+        self.node_type = self.array_elem.node_type
+
 
 
 class StmtListNode(StmtNode):
