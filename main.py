@@ -91,7 +91,7 @@ def main() -> None:
     массив[1][9] = 10;
     """
 
-    my_program.execute(prog7)
+    my_program.execute(prog1)
 
 
 if __name__ == "__main__":
